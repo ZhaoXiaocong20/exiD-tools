@@ -6,7 +6,7 @@ import pandas as pd
 from tracks_import import read_from_csv
 
 
-def cut_in_extraction(tracks, cut_in_events):
+def cut_in_extraction(recordingId, tracks, track_meta, cut_in_events):
 
     cut_in_events_meta = cut_in_events
     for track in tracks:
@@ -44,11 +44,14 @@ def cut_in_extraction(tracks, cut_in_events):
                         min_ttc = -1
 
                     # save meta info. of cut-in events: cut-in track id, rear track id, minimal TTC
-                    cut_in_events_meta.append({'LCId': track['trackId'],
-                                               'rearID': candidate_id,
+                    cut_in_events_meta.append({'recordingId': recordingId,
+                                               'LCId': track['trackId'],
+                                               'rearId': candidate_id,
                                                'ttc': min_ttc,
-                                               'LCLanelet': list(filter(is_positive, np.unique(track['laneletId']))),
-                                               'rearLanelet': list(filter(is_positive, np.unique(tracks[candidate_id]['laneletId'])))}
+                                               'LCLanelet': [int(i) for i in list(filter(is_positive, np.unique(track['laneletId'])))],
+                                               'rearLanelet': [int(i) for i in list(filter(is_positive, np.unique(tracks[candidate_id]['laneletId'])))],
+                                               'start_frame': min(track_meta[track['trackId']]['initialFrame'], track_meta[candidate_id]['initialFrame']),
+                                               'end_frame': max(track_meta[track['trackId']]['finalFrame'], track_meta[candidate_id]['finalFrame'])}
                                               )
 
     return cut_in_events_meta
@@ -56,8 +59,8 @@ def cut_in_extraction(tracks, cut_in_events):
 
 def save_event_meta(data):
 
-    fileds_names = ('LCId', 'rearID', 'ttc', 'LCLanelet', 'rearLanelet')
-    with open('event_meta.csv', 'w', encoding='utf-8', newline='') as outfile:
+    fileds_names = ('recordingId', 'LCId', 'rearId', 'ttc', 'LCLanelet', 'rearLanelet', 'start_frame', 'end_frame')
+    with open('../output/cut-in-event-meta.csv', 'w', encoding='utf-8', newline='') as outfile:
         writer = DictWriter(outfile, fileds_names)
         writer.writeheader()
         writer.writerows(data)
@@ -94,7 +97,7 @@ def main():
         tracks, static_info, meta_info = read_from_csv(tracks_file, tracks_meta_file, recording_meta_file,
                                                        include_px_coordinates=True)
         # Get cut-in events
-        cut_in_events = cut_in_extraction(tracks, cut_in_events)
+        cut_in_events = cut_in_extraction(recording, tracks, static_info, cut_in_events)
     save_event_meta(cut_in_events)
 
 
