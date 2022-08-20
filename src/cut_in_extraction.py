@@ -57,7 +57,7 @@ def cut_in_extraction(tracks, cut_in_events):
 def save_event_meta(data):
 
     fileds_names = ('LCId', 'rearID', 'ttc', 'LCLanelet', 'rearLanelet')
-    with open('event_meta.csv', 'w', encoding='utf-8', newline='') as outfile:
+    with open('../output/event_meta.csv', 'w', encoding='utf-8', newline='') as outfile:
         writer = DictWriter(outfile, fileds_names)
         writer.writeheader()
         writer.writerows(data)
